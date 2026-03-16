@@ -14,12 +14,14 @@ async def connect():
         serverSelectionTimeoutMS=5000,
     )
 
-    # Fuerza conexión real
+    # Force real connection
     await client.admin.command("ping")
 
-    db = client.get_default_database()
+    # Select database depending on environment
+    db = client[settings.database_name]
 
-    print("✅ MongoDB connected successfully")
+    print(f"✅ MongoDB connected successfully")
+    print(f"📦 Database: {settings.database_name}")
 
 
 async def get_db():
@@ -29,6 +31,8 @@ async def get_db():
 
 
 async def close():
+    global client
+
     if client:
         client.close()
         print("MongoDB connection closed")

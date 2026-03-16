@@ -1,58 +1,145 @@
-from datetime import datetime, timezone
 from fastapi import HTTPException
-
-from .models import Users, UserCreate, LoginRequest
-from .auth import hash_password, verify_password, create_token
+import httpx
+from datetime import datetime, timedelta, timezone
 from app.core.db import get_db
+import secrets 
+from app.core.mail import send_email
+import secrets
+from datetime import datetime, timedelta
 
 
-async def register_user(data: UserCreate):
+TOKEN_EXP_HOURS = 24
+
+
+IT_API_URL = "http://backend:8000/mock/it/users"
+
+
+async def sync_users_from_it():
+
     db = await get_db()
 
-    exists = await db.users.find_one({"email": data.email})
-    if exists:
-        raise HTTPException(status_code=400, detail="Email already registered")
+    async with httpx.AsyncClient() as client:
+        response = await client.get(IT_API_URL)
+        response.raise_for_status()
 
-    doc = data.model_dump()
-    # password -> hash
-    raw_password = doc.pop("password")
-    doc["password_hash"] = hash_password(raw_password)
-    doc["last_activity"] = None
+    users = response.json()
 
-    result = await db.users.insert_one(doc)
-    return {"id": str(result.inserted_id)}
+    now = datetime.now(timezone.utc)
+
+    inserted = 0
+    updated = 0
+
+    for user in users:
+
+        existing = await db.users.find_one({
+            "clock_id": user["clock_id"]
+        })
+
+        if existing:
+
+            await db.users.update_one(
+                {"_id": existing["_id"]},
+                {
+                    "$set": {
+                        **user,
+                        "updated_at": now
+                    }
+                }
+            )
+
+            updated += 1
+
+        else:
+
+            doc = {
+                **user,
+                "created_at": now
+            }
+
+            await db.users.insert_one(doc)
+
+            inserted += 1
+
+    return {
+        "inserted": inserted,
+        "updated": updated,
+        "total_from_it": len(users)
+    }
 
 
-async def login_user(data: LoginRequest):
+TOKEN_EXP_HOURS = 24
+
+
+async def send_setpass_emails_service():
+
     db = await get_db()
 
-    user = await db.users.find_one({"email": data.email})
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+    users = await db.users.find({
+        "email_set_pass": False
+    }).to_list(length=None)
 
-    if not verify_password(data.password, user["password_hash"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+    sent = 0
 
-    token = create_token(
-        user_id=str(user["_id"]),
-        id_plant=user["id_plant"],
-        clock_num=user["clock_num"],
-        level=user.get("level", [])
-    )
+    for user in users:
 
-    await db.users.update_one(
-        {"_id": user["_id"]},
-        {"$set": {"last_activity": datetime.now(timezone.utc)}},
-    )
+        token = secrets.token_urlsafe(32)
 
-    return {"access_token": token, "token_type": "bearer"}
+        exp = datetime.utcnow() + timedelta(hours=TOKEN_EXP_HOURS)
+
+        await db.users.update_one(
+            {"_id": user["_id"]},
+            {
+                "$set": {
+                    "set_pass_token": token,
+                    "set_pass_token_exp": exp
+                }
+            }
+        )
+
+        link = f"https://wytrack.com/set-password?token={token}"
+
+        await send_email(user["email"], link)
+
+        sent += 1
+
+    return {
+        "emails_sent": sent
+    }
 
 
-async def list_users():
+async def create_user_service(user):
+
     db = await get_db()
-    cursor = db.users.find({})
-    users: list[Users] = []
-    async for u in cursor:
-        u["id"] = str(u["_id"])
-        users.append(Users(**u))
-    return users
+
+    existing = await db.users.find_one({
+        "email": user.email
+    })
+
+    if existing:
+        raise HTTPException(400, "User already exists")
+
+    token = secrets.token_urlsafe(32)
+
+    exp = datetime.utcnow() + timedelta(hours=TOKEN_EXP_HOURS)
+
+    doc = {
+        **user.model_dump(),
+
+        "is_active": False,
+        "email_set_pass": False,
+
+        "set_pass_token": token,
+        "set_pass_token_exp": exp,
+
+        "created_at": datetime.utcnow(),
+    }
+
+    await db.users.insert_one(doc)
+
+    link = f"https://wytrack.com/set-password?token={token}"
+
+    await send_email(user.email, link)
+
+    return {
+        "message": "User created and email sent"
+    }

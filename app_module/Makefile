@@ -1,20 +1,18 @@
-PROJECT_NAME = support-app-module
-DOCKER_COMPOSE = docker-compose
-DOCKER_EXEC = docker exec
+PROJECT_NAME = wytrack
+COMPOSE = docker compose
 
 SERVICE_FRONTEND = frontend
 SERVICE_BACKEND = backend
-SERVICE_CELERY = celery
 SERVICE_MONGO = mongo
 SERVICE_REDIS = redis
-COMPOSE_DEV = docker-compose -f docker-compose.yml
-COMPOSE_PROD = docker-compose -f docker-compose.prod.yml
+
 
 .PHONY: help up down restart build logs ps \
         shell-frontend shell-backend shell-mongo shell-redis \
-        restart-frontend restart-backend restart-celery \
-        logs-frontend logs-backend logs-celery logs-mongo logs-redis \
+        restart-frontend restart-backend \
+        logs-frontend logs-backend logs-mongo logs-redis \
         npm-install npm-ci rebuild-backend rebuild-frontend
+
 
 help:
 	@echo ""
@@ -22,7 +20,7 @@ help:
 	@echo ""
 	@echo "▶️  Arranque / parada"
 	@echo "  make up                 - Levanta todos los contenedores"
-	@echo "  make down               - Detiene y elimina contenedores"
+	@echo "  make down               - Detiene contenedores"
 	@echo "  make restart            - Reinicia todo"
 	@echo "  make ps                 - Lista contenedores"
 	@echo ""
@@ -35,112 +33,101 @@ help:
 	@echo "  make logs               - Logs de todos"
 	@echo "  make logs-frontend      - Logs del frontend"
 	@echo "  make logs-backend       - Logs del backend"
-	@echo "  make logs-celery        - Logs de celery"
 	@echo "  make logs-mongo         - Logs de mongo"
 	@echo "  make logs-redis         - Logs de redis"
 	@echo ""
 	@echo "💻 Consolas"
 	@echo "  make shell-frontend     - Shell del frontend"
 	@echo "  make shell-backend      - Shell del backend"
-	@echo "  make shell-mongo        - Shell mongo"
+	@echo "  make shell-mongo        - Mongo shell"
 	@echo "  make shell-redis        - redis-cli"
 	@echo ""
 	@echo "🎯 Servicios (reinicio rápido)"
 	@echo "  make restart-frontend"
 	@echo "  make restart-backend"
-	@echo "  make restart-celery"
 	@echo ""
 	@echo "📦 NPM utilidades"
 	@echo "  make npm-install        - npm install dentro del contenedor"
 	@echo "  make npm-ci             - npm ci dentro del contenedor"
 	@echo ""
 
+
 up:
-	$(COMPOSE_DEV) up -d
+	$(COMPOSE) up -d
+
+start:
+	$(COMPOSE) up -d --build
 
 down:
-	$(COMPOSE_DEV) down
+	$(COMPOSE) down
+
 
 restart: down up
 
+
 ps:
-	$(DOCKER_COMPOSE) ps
+	$(COMPOSE) ps
+
 
 build:
-	$(DOCKER_COMPOSE) build
+	$(COMPOSE) build
+
 
 rebuild-frontend:
-	$(DOCKER_COMPOSE) build $(SERVICE_FRONTEND)
+	$(COMPOSE) build $(SERVICE_FRONTEND)
+
 
 rebuild-backend:
-	$(DOCKER_COMPOSE) build $(SERVICE_BACKEND)
+	$(COMPOSE) build $(SERVICE_BACKEND)
+
 
 logs:
-	$(DOCKER_COMPOSE) logs -f
+	$(COMPOSE) logs -f
+
 
 logs-frontend:
-	$(DOCKER_COMPOSE) logs -f $(SERVICE_FRONTEND)
+	$(COMPOSE) logs -f $(SERVICE_FRONTEND)
+
 
 logs-backend:
-	$(DOCKER_COMPOSE) logs -f $(SERVICE_BACKEND)
+	$(COMPOSE) logs -f $(SERVICE_BACKEND)
 
-logs-celery:
-	$(DOCKER_COMPOSE) logs -f $(SERVICE_CELERY)
 
 logs-mongo:
-	$(DOCKER_COMPOSE) logs -f $(SERVICE_MONGO)
+	$(COMPOSE) logs -f $(SERVICE_MONGO)
+
 
 logs-redis:
-	$(DOCKER_COMPOSE) logs -f $(SERVICE_REDIS)
+	$(COMPOSE) logs -f $(SERVICE_REDIS)
+
 
 shell-frontend:
-	$(DOCKER_COMPOSE) exec $(SERVICE_FRONTEND) sh
+	$(COMPOSE) exec $(SERVICE_FRONTEND) sh
+
 
 shell-backend:
-	$(DOCKER_COMPOSE) exec $(SERVICE_BACKEND) sh
+	$(COMPOSE) exec $(SERVICE_BACKEND) sh
 
 
 shell-mongo:
-	$(DOCKER_COMPOSE) exec $(SERVICE_MONGO) bash
+	$(COMPOSE) exec $(SERVICE_MONGO) mongosh -u root -p rootpassword --authenticationDatabase admin
+
 
 shell-redis:
-	$(DOCKER_COMPOSE) exec $(SERVICE_REDIS) redis-cli
+	$(COMPOSE) exec $(SERVICE_REDIS) redis-cli
+
 
 restart-frontend:
-	$(DOCKER_COMPOSE) restart $(SERVICE_FRONTEND)
+	$(COMPOSE) restart $(SERVICE_FRONTEND)
+
 
 restart-backend:
-	$(DOCKER_COMPOSE) restart $(SERVICE_BACKEND)
+	$(COMPOSE) restart $(SERVICE_BACKEND)
 
-restart-celery:
-	$(DOCKER_COMPOSE) restart $(SERVICE_CELERY)
 
 npm-install:
-	$(DOCKER_COMPOSE) run --rm $(SERVICE_FRONTEND) npm install
+	$(COMPOSE) run --rm $(SERVICE_FRONTEND) npm install
+
 
 npm-ci:
-	$(DOCKER_COMPOSE) run --rm $(SERVICE_FRONTEND) npm ci
-
-up_prod:
-	docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-
-down_prod:
-	docker-compose -f docker-compose.yml -f docker-compose.prod.yml down
-	
-down_prod_clean:
-	$(COMPOSE_PROD) down -v
-
-build_prod:
-	$(COMPOSE_PROD) build
-
-rebuild_prod:
-	$(COMPOSE_PROD) build --no-cache
-
-logs_prod:
-	$(COMPOSE_PROD) logs -f
-
-shell-mongo-dev:
-	$(COMPOSE_DEV) exec mongo mongosh
-
-shell-mongo-prod:
-	$(COMPOSE_PROD) exec mongo mongosh -u root -p rootpassword --authenticationDatabase admin
+	$(COMPOSE) run --rm $(SERVICE_FRONTEND) npm ci

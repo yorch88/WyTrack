@@ -1,45 +1,36 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 
 from app.core.config import settings
-from ..modules.helpers.users import normalize_clock
-from ..modules.users.auth import is_token_blacklisted
+from app.core.db import get_db
+from bson import ObjectId
+
 
 security = HTTPBearer()
 
 
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-):
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+
     token = credentials.credentials
 
     try:
         payload = jwt.decode(
             token,
             settings.SECRET_KEY,
-            algorithms=[settings.JWT_ALGORITHM],
+            algorithms=[settings.JWT_ALGORITHM]
         )
+
     except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-        )
+        raise HTTPException(status_code=401, detail="Invalid token")
 
     user_id = payload.get("sub")
-    id_plant = payload.get("id_plant")
-    clock_num = normalize_clock(payload.get("clock_num"))
-    level = payload.get("level", [])
 
-    if not user_id or not id_plant:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload",
-        )
+    db = await get_db()
 
-    return {
-        "id": user_id,
-        "id_plant": id_plant,
-        "clock_num": clock_num,
-        "level": level
-    }
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return user

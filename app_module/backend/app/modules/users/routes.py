@@ -1,47 +1,56 @@
 from fastapi import APIRouter, Depends, HTTPException
-from .service import register_user, login_user, list_users
-from .models import Users, UserCreate, LoginRequest
-from app.core.security import security
-from app.core.config import settings
-from app.modules.users.auth import add_token_to_blacklist
-from jose import jwt
-from app.core.config import settings
-from app.modules.users.auth import add_token_to_blacklist
-from app.core.security import get_current_user, security
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-router = APIRouter(tags=["Auth"]) 
+from app.core.security import get_current_user
+
+from .service import sync_users_from_it, create_user_service
+from app.modules.users.service import send_setpass_emails_service
+from .models import UserManualCreate
+
+router = APIRouter()
 
 
-@router.post("/register")
-async def register(body: UserCreate):
-    return await register_user(body)
+@router.post("/sync")
+async def sync_users(current_user = Depends(get_current_user)):
+
+    """
+    Synchronize users from IT system
+    Only admin or superadmin should run this
+    """
+
+    if current_user["level"] not in ["admin", "superadmin"]:
+        raise HTTPException(403, "Not authorized")
+
+    result = await sync_users_from_it()
+
+    return result
 
 
-@router.post("/login")
-async def login(data: LoginRequest):
-    return await login_user(data)
+@router.post("/users/send-setpass-emails")
+async def send_setpass_emails(current_user = Depends(get_current_user)):
 
-@router.get("/", response_model=list[Users])
-async def get_all():
-    return await list_users()
+    """
+    Send password setup emails
+    Only admin or superadmin
+    """
 
-@router.post("/logout")
-async def logout(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    if current_user["level"] not in ["admin", "superadmin"]:
+        raise HTTPException(403, "Not authorized")
+
+    return await send_setpass_emails_service()
+
+
+@router.post("/users")
+async def create_user(
+    user: UserManualCreate,
+    current_user = Depends(get_current_user)
 ):
-    token = credentials.credentials
 
-    payload = jwt.decode(
-        token,
-        settings.SECRET_KEY,
-        algorithms=[settings.JWT_ALGORITHM],
-    )
+    """
+    Create user manually
+    Only admin or superadmin
+    """
 
-    exp = payload.get("exp")
-    if not exp:
-        raise HTTPException(status_code=400, detail="Invalid token")
+    if current_user["level"] not in ["admin", "superadmin"]:
+        raise HTTPException(403, "Not authorized")
 
-    add_token_to_blacklist(token, exp)
-
-    return {"detail": "Logged out successfully"}
+    return await create_user_service(user)
