@@ -39,11 +39,10 @@ async def send_setpass_emails(current_user = Depends(get_current_user)):
     return await send_setpass_emails_service()
 
 
-@router.post("/users")
+@router.post("/manual")
 async def create_user(
     user: UserManualCreate,
-    current_user = Depends(get_current_user)
-):
+    current_user = Depends(get_current_user)):
 
     """
     Create user manually
