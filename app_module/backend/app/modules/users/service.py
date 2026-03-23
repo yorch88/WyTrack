@@ -4,7 +4,6 @@ from datetime import datetime, timedelta, timezone
 from app.core.db import get_db
 import secrets 
 from app.core.mail import send_email
-import secrets
 from datetime import datetime, timedelta
 
 

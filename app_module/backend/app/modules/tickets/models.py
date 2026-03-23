@@ -1,70 +1,51 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
-from datetime import datetime 
+from pydantic import BaseModel
+from typing import Optional, Literal
+from datetime import datetime
 
 
-class Ticket(BaseModel):
-    id: Optional[str] = None
-    title: str
+Priority = Literal["low", "medium", "high", "urgent"]
+
+Status = Literal[
+    "open",
+    "in_progress",
+    "waiting",
+    "resolved",
+    "closed"
+]
+
 
 class TicketCreate(BaseModel):
     title: str
-    description: Optional[str] = None
-    priority: str = "medium"
-    area: Optional[str] = None
-    id_department: Optional[str] = None
-    station: Optional[str] = None
-    issue_id: Optional[str] = None
+    description: str
+    reason: str
+
+    assigned_to: Optional[str] = None
+    priority: Priority = "medium"
+
+    email_subject: Optional[str] = None
+    parent_ticket_id: Optional[str] = None
+
+    estimated_close_at: Optional[datetime] = None
 
 
-class TicketInDB(BaseModel):
+class TicketDB(BaseModel):
     id: str
+
     title: str
     description: str
-    priority: str
-    requester: str
-    id_plant: str
+    reason: str
+
+    created_by: str
+    assigned_to: Optional[str]
+
+    priority: Priority
+    status: Status = "open"
+
+    email_subject: Optional[str]
+    parent_ticket_id: Optional[str]
+
     created_at: datetime
+    updated_at: Optional[datetime]
 
-class Comment(BaseModel):
-    user_clock: str
-    message: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-
-class ChangeLog(BaseModel):
-    field: str
-    old_value: str | None = None
-    new_value: str | None = None
-    changed_by: str
-    reason: str | None = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-
-class TicketOut(BaseModel):
-    id: str
-    title: str
-    description: Optional[str] = None
-    priority: Optional[str] = None
-    status: str
-    requester: Optional[str] = None
-    id_plant: str
-    comments: List[Comment] = []
-    area: Optional[str] = None
-    station: Optional[str] = None
-    created_at: Optional[datetime] = None
-    history: List[ChangeLog] = []
-    issue_id: Optional[str] = None
-    id_department: str
-    assigned_to: str | None = None
-    assignment_history: list[dict] = []
-    
-class TicketUpdate(BaseModel):
-    status: str | None = None
-    priority: str | None = None
-    description: str | None = None
-    area: str | None = None
-    station: str | None = None
-    reason: str | None = None
-
-class AssignBody(BaseModel):
-    user_id: str
-    note: str | None = None
+    estimated_close_at: Optional[datetime]
+    closed_at: Optional[datetime]

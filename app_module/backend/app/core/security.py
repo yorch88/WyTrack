@@ -1,16 +1,17 @@
-from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from bson import ObjectId
 from jose import jwt, JWTError
+from fastapi import HTTPException, Depends, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.core.config import settings
 from app.core.db import get_db
-from bson import ObjectId
-
 
 security = HTTPBearer()
 
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
 
     token = credentials.credentials
 
@@ -20,17 +21,36 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             settings.SECRET_KEY,
             algorithms=[settings.JWT_ALGORITHM]
         )
-
     except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
 
     user_id = payload.get("sub")
 
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload"
+        )
+
     db = await get_db()
 
-    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    try:
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+    except:
+        raise HTTPException(401, "Invalid user id")
 
     if not user:
-        raise HTTPException(status_code=401, detail="User not found")
+        raise HTTPException(404, "User not found")
 
-    return user
+    if not user.get("is_active", False):
+        raise HTTPException(403, "User inactive")
+
+    return {
+        "id": str(user["_id"]),
+        "email": user["email"],
+        "level": user["level"],
+        "full_name": user.get("full_name"),
+    }
