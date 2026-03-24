@@ -142,3 +142,32 @@ async def create_user_service(user):
     return {
         "message": "User created and email sent"
     }
+    
+# aqui search users
+async def search_users_service(search: str = ""):
+
+    db = await get_db()
+
+    query = {}
+
+    if search:
+        query = {
+            "$or": [
+                {"full_name": {"$regex": search, "$options": "i"}},
+                {"clock_id": {"$regex": search, "$options": "i"}},
+                {"email": {"$regex": search, "$options": "i"}},
+            ]
+        }
+
+    users = await db.users.find(query).limit(20).to_list(length=20)
+
+    return [
+        {
+            "clock_id": u["clock_id"],
+            "full_name": u["full_name"],
+            "area": u.get("area"),
+            "email": u.get("email"),
+            "level": u.get("level"),  # 👈 agregar
+        }
+        for u in users
+    ]

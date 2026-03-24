@@ -28,6 +28,12 @@ import ReceivingCreate from "./modules/receiving/pages/ReceivingCreate.jsx";
 import ReceivingDetail from "./modules/receiving/pages/ReceivingDetail.jsx";
 import ReceivingList from "./modules/receiving/pages/ReceivingList.jsx";
 
+
+// TICKETS
+import CreateTicketModal from "./modules/tickets/CreateTicketModal.jsx";
+import TicketsPage from "./modules/tickets/TicketsPage.jsx";
+import TicketsTable from "./modules/tickets/TicketsTable.jsx";
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
@@ -148,7 +154,31 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             </RequireAuth>
           }
         />
-
+      { /* TICKETS */ }
+      <Route
+          path="/createticket"
+          element={
+            <RequireAuth>
+              <CreateTicketModal />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/ticketstable"
+          element={
+            <RequireAuth>
+              < TicketsTable />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/ticketspage"
+          element={
+            <RequireAuth>
+              <TicketsPage />
+            </RequireAuth>
+          }
+        />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

@@ -22,7 +22,7 @@ export default function Login() {
       localStorage.setItem("user_level", JSON.stringify(data.level || []));
 
       const redirect =
-        localStorage.getItem("redirect_after_login") || "/tickets";
+        localStorage.getItem("redirect_after_login") || "/ticketspage";
 
       localStorage.removeItem("redirect_after_login");
 
