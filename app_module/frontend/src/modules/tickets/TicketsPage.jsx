@@ -6,19 +6,48 @@ import CreateTicketModal from "./CreateTicketModal";
 export default function TicketsPage() {
   const [tickets, setTickets] = useState([]);
   const [showModal, setShowModal] = useState(false);
+
   const [filters, setFilters] = useState({
     status: "",
     priority: "",
   });
 
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    pages: 1,
+  });
+
+  const [loading, setLoading] = useState(false);
+
   async function loadTickets() {
-    const data = await getTickets(filters);
-    setTickets(data);
+    try {
+      setLoading(true);
+
+      const res = await getTickets({
+        ...filters,
+        page: pagination.page,
+        limit: pagination.limit,
+      });
+
+      setTickets(res.data);
+
+      setPagination((prev) => ({
+        ...prev,
+        total: res.pagination.total,
+        pages: res.pagination.pages,
+      }));
+    } catch (err) {
+      console.error("Error loading tickets:", err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
     loadTickets();
-  }, [filters]);
+  }, [filters, pagination.page]);
 
   return (
     <div className="min-h-screen bg-slate-950 p-6 text-white">
@@ -37,7 +66,6 @@ export default function TicketsPage() {
 
       {/* FILTERS */}
       <div className="flex gap-3 mb-4">
-
         <select
           onChange={(e) =>
             setFilters((f) => ({ ...f, status: e.target.value }))
@@ -46,6 +74,7 @@ export default function TicketsPage() {
         >
           <option value="">All Status</option>
           <option value="open">Open</option>
+          <option value="closed">Closed</option>
           <option value="in_progress">In Progress</option>
         </select>
 
@@ -57,16 +86,47 @@ export default function TicketsPage() {
         >
           <option value="">All Priority</option>
           <option value="low">Low</option>
+          <option value="medium">Medium</option>
           <option value="high">High</option>
+          <option value="urgent">Urgent</option>
         </select>
-
       </div>
+
+      {/* LOADING */}
+      {loading && <p>Loading tickets...</p>}
 
       {/* TABLE */}
       <TicketsTable
         tickets={tickets}
         onSelect={(t) => console.log("open ticket", t)}
       />
+
+      {/* PAGINATION */}
+      <div className="flex gap-3 mt-4">
+        <button
+          disabled={pagination.page === 1}
+          onClick={() =>
+            setPagination((p) => ({ ...p, page: p.page - 1 }))
+          }
+          className="bg-slate-700 px-3 py-1 rounded"
+        >
+          Prev
+        </button>
+
+        <span>
+          Page {pagination.page} / {pagination.pages}
+        </span>
+
+        <button
+          disabled={pagination.page >= pagination.pages}
+          onClick={() =>
+            setPagination((p) => ({ ...p, page: p.page + 1 }))
+          }
+          className="bg-slate-700 px-3 py-1 rounded"
+        >
+          Next
+        </button>
+      </div>
 
       {/* MODAL */}
       {showModal && (

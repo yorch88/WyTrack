@@ -1,8 +1,12 @@
 import { API_URL } from "../shared/apiConfig";
 import { getAuthHeaders } from "../shared/authHeaders";
 
-export async function getTickets(filters = {}) {
-  const query = new URLSearchParams(filters).toString();
+export async function getTickets({ page = 1, limit = 10, ...filters } = {}) {
+  const query = new URLSearchParams({
+    ...filters,
+    page,
+    limit,
+  }).toString();
 
   const res = await fetch(`${API_URL}/tickets?${query}`, {
     headers: getAuthHeaders(),

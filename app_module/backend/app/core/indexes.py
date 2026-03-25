@@ -41,4 +41,27 @@ async def create_indexes():
         ("created_at", -1)
     ])
 
+    await db.tickets.create_index([
+    ("priority_order", 1),
+    ("created_at", -1)
+    ])
+    
+    # filtros + orden
+    await db.tickets.create_index([
+        ("status", 1),
+        ("priority_order", 1),
+        ("created_at", -1)
+    ])
+
+    # assigned dashboards
+    await db.tickets.create_index([
+        ("assigned_to", 1),
+        ("priority_order", 1),
+        ("created_at", -1)
+    ])
+    await db.tickets.create_index([
+        ("created_by", 1),
+        ("priority_order", 1),
+        ("created_at", -1)
+    ])
     print("✅ MongoDB indexes ensured (users + tickets + events)")

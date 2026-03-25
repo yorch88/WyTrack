@@ -9,7 +9,7 @@ from app.core.indexes import create_indexes
 from app.modules.users.routes import router as users_router
 from app.modules.users.mock_it_api import router as mock_it_router
 from app.modules.auth.routes import router as auth_router
-from app.modules.tickets.routes import router as tickets_router  # ✅ NEW
+from app.modules.tickets.routes import router as tickets_router
 
 # =========================
 # App Initialization

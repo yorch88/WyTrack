@@ -48,8 +48,13 @@ async def get_current_user(
     if not user.get("is_active", False):
         raise HTTPException(403, "User inactive")
 
+    # 🔥 FIX AQUÍ
+    if "clock_id" not in user:
+        raise HTTPException(500, "User missing clock_id")
+
     return {
         "id": str(user["_id"]),
+        "clock_id": user["clock_id"],   # ✅ IMPORTANTE
         "email": user["email"],
         "level": user["level"],
         "full_name": user.get("full_name"),

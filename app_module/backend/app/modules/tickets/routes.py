@@ -4,9 +4,7 @@ from app.core.security import get_current_user
 from .models import TicketCreate
 from .service import (
     create_ticket_service,
-    reassign_ticket_service,
-    add_comment_service,
-    change_status_service
+    get_tickets_service
 )
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
@@ -15,33 +13,25 @@ router = APIRouter(prefix="/tickets", tags=["tickets"])
 @router.post("/")
 async def create_ticket(
     data: TicketCreate,
-    current_user = Depends(get_current_user)  # 🔥 validación sesión
+    current_user = Depends(get_current_user)
 ):
     return await create_ticket_service(data, current_user)
 
 
-@router.post("/{ticket_id}/reassign")
-async def reassign_ticket(
-    ticket_id: str,
-    new_user_id: str,
+@router.get("/")
+async def get_tickets(
+    status: str = None,
+    priority: str = None,
+    page: int = 1,
+    limit: int = 10,
     current_user = Depends(get_current_user)
 ):
-    return await reassign_ticket_service(ticket_id, new_user_id, current_user)
+    filters = {}
 
+    if status:
+        filters["status"] = status
 
-@router.post("/{ticket_id}/comment")
-async def add_comment(
-    ticket_id: str,
-    message: str,
-    current_user = Depends(get_current_user)
-):
-    return await add_comment_service(ticket_id, message, current_user)
+    if priority:
+        filters["priority"] = priority
 
-
-@router.post("/{ticket_id}/status")
-async def change_status(
-    ticket_id: str,
-    new_status: str,
-    current_user = Depends(get_current_user)
-):
-    return await change_status_service(ticket_id, new_status, current_user)
+    return await get_tickets_service(filters, page, limit)

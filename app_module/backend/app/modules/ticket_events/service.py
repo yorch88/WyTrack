@@ -6,7 +6,7 @@ import uuid
 async def create_event(
     ticket_id: str,
     event_type: str,
-    user_id: str,
+    user_id: str,  # 🔥 ahora siempre clock_id
     message: str = None,
     old_value: str = None,
     new_value: str = None
