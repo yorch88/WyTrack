@@ -19,7 +19,7 @@ import LocationsList from "./modules/locations/pages/LocationsList.jsx";
 import LocationCreate from "./modules/locations/pages/LocationCreate.jsx";
 
 // TASKS
-import TasksCreate from "./modules/tasks/pages/TasksCreate.jsx";
+// import TasksCreate from "./modules/tasks/pages/TasksCreate.jsx";
 import TasksReports from "./modules/tasks/pages/TasksReports.jsx";
 import TasksDetail from "./modules/tasks/pages/TasksDetail.jsx";
 
@@ -118,14 +118,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           }
         />
 
-        <Route
+        {/* <Route
           path="/task/create"
           element={
             <RequireAuth>
               <TasksCreate />
             </RequireAuth>
           }
-        />
+        /> */}
 
         <Route
           path="/tasks/:id"

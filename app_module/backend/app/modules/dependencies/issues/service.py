@@ -11,7 +11,6 @@ async def create_issue(data: IssueCreate) -> Issue:
 
     doc = {
         "name": data.name,
-        "department": data.department,
         "description": data.description,
         "created_at": datetime.now(timezone.utc),
     }

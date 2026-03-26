@@ -24,7 +24,6 @@ export default function CreateTicketModal({ onClose, onCreated }) {
   async function handleSubmit(e) {
     e.preventDefault();
 
-    // 🚫 Validaciones
     if (!form.title.trim()) {
       alert("Title is required");
       return;
@@ -40,7 +39,6 @@ export default function CreateTicketModal({ onClose, onCreated }) {
 
       const payload = {
         ...form,
-        assigned_to: form.assigned_to,
         parent_ticket_id: form.parent_ticket_id || null,
         estimated_close_at: form.estimated_close_at || null,
         email_subject: form.email_subject || null,
@@ -60,131 +58,108 @@ export default function CreateTicketModal({ onClose, onCreated }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
 
-      <div className="bg-slate-900 p-6 rounded-xl w-full max-w-4xl shadow-xl">
+      {/* LEFT */}
+      <div className="space-y-4">
 
-        <h2 className="text-white text-lg mb-4 font-semibold">
-          Create Ticket
-        </h2>
+        <div>
+          <label className="text-xs text-gray-400">Title *</label>
+          <input
+            value={form.title}
+            onChange={(e) => update("title", e.target.value)}
+            className="w-full p-2 bg-slate-800 text-white rounded mt-1"
+          />
+        </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-xs text-gray-400">Description</label>
+          <textarea
+            value={form.description}
+            onChange={(e) => update("description", e.target.value)}
+            className="w-full p-2 bg-slate-800 text-white rounded mt-1"
+          />
+        </div>
 
-          {/* LEFT COLUMN */}
-          <div className="space-y-4">
+        <div>
+          <label className="text-xs text-gray-400">Assign to *</label>
+          <UserSelect
+            value={form.assigned_to}
+            onChange={(val) => update("assigned_to", val)}
+          />
+        </div>
 
-            {/* TITLE */}
-            <div>
-              <label className="text-xs text-gray-400">Title *</label>
-              <input
-                value={form.title}
-                onChange={(e) => update("title", e.target.value)}
-                className="w-full p-2 bg-slate-800 text-white rounded mt-1"
-                placeholder="Short summary"
-              />
-            </div>
+        <div>
+          <label className="text-xs text-gray-400">Priority</label>
+          <select
+            value={form.priority}
+            onChange={(e) => update("priority", e.target.value)}
+            className="w-full p-2 bg-slate-800 text-white rounded mt-1"
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
 
-            {/* DESCRIPTION */}
-            <div>
-              <label className="text-xs text-gray-400">Description</label>
-              <textarea
-                value={form.description}
-                onChange={(e) => update("description", e.target.value)}
-                className="w-full p-2 bg-slate-800 text-white rounded mt-1"
-              />
-            </div>
+      </div>
 
-            {/* USER */}
-            <div>
-              <label className="text-xs text-gray-400">
-                Assign to * (search user)
-              </label>
+      {/* RIGHT */}
+      <div className="space-y-4">
 
-              <UserSelect
-                value={form.assigned_to}
-                onChange={(val) => update("assigned_to", val)}
-              />
-            </div>
+        <div>
+          <label className="text-xs text-gray-400">Email Reference</label>
+          <input
+            value={form.email_subject}
+            onChange={(e) => update("email_subject", e.target.value)}
+            className="w-full p-2 bg-slate-800 text-white rounded mt-1"
+          />
+        </div>
 
-            {/* PRIORITY */}
-            <div>
-              <label className="text-xs text-gray-400">Priority</label>
-              <select
-                value={form.priority}
-                onChange={(e) => update("priority", e.target.value)}
-                className="w-full p-2 bg-slate-800 text-white rounded mt-1"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
-            </div>
+        <div>
+          <label className="text-xs text-gray-400">Parent Ticket</label>
+          <input
+            value={form.parent_ticket_id}
+            onChange={(e) => update("parent_ticket_id", e.target.value)}
+            className="w-full p-2 bg-slate-800 text-white rounded mt-1"
+          />
+        </div>
 
-          </div>
+        <div>
+          <label className="text-xs text-gray-400">Estimated Close</label>
+          <input
+            type="datetime-local"
+            value={form.estimated_close_at}
+            onChange={(e) =>
+              update("estimated_close_at", e.target.value)
+            }
+            className="w-full p-2 bg-slate-800 text-white rounded mt-1"
+          />
+        </div>
 
-          {/* RIGHT COLUMN */}
-          <div className="space-y-4">
+      </div>
 
-            {/* EMAIL */}
-            <div>
-              <label className="text-xs text-gray-400">
-                Email Reference
-              </label>
-              <input
-                value={form.email_subject}
-                onChange={(e) => update("email_subject", e.target.value)}
-                className="w-full p-2 bg-slate-800 text-white rounded mt-1"
-              />
-            </div>
+      {/* ACTIONS */}
+      <div className="col-span-2 flex justify-end gap-3 mt-2">
 
-            {/* PARENT */}
-            <div>
-              <label className="text-xs text-gray-400">
-                Parent Ticket
-              </label>
-              <input
-                value={form.parent_ticket_id}
-                onChange={(e) => update("parent_ticket_id", e.target.value)}
-                className="w-full p-2 bg-slate-800 text-white rounded mt-1"
-              />
-            </div>
-
-            {/* DATE */}
-            <div>
-              <label className="text-xs text-gray-400">
-                Estimated Close Date
-              </label>
-              <input
-                type="datetime-local"
-                value={form.estimated_close_at}
-                onChange={(e) =>
-                  update("estimated_close_at", e.target.value)
-                }
-                className="w-full p-2 bg-slate-800 text-white rounded mt-1"
-              />
-            </div>
-
-          </div>
-
-          {/* FULL WIDTH BUTTON */}
-          <div className="col-span-2">
-            <button
-              disabled={loading}
-              className="bg-indigo-600 w-full py-2 rounded text-white mt-2"
-            >
-              {loading ? "Creating..." : "Create Ticket"}
-            </button>
-          </div>
-
-        </form>
         <button
+          type="button"
           onClick={onClose}
-          className="mt-4 text-sm text-gray-400 hover:text-white"
+          className="px-4 py-2 border border-slate-600 rounded-md"
         >
           Cancel
         </button>
+
+        <button
+          disabled={loading}
+          className="bg-indigo-600 px-4 py-2 rounded"
+        >
+          {loading ? "Creating..." : "Create Ticket"}
+        </button>
+
       </div>
-    </div>
+
+    </form>
   );
 }

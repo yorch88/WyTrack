@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 
 from app.core.db import get_db
-from app.modules.dependencies.departments.service import get_department
+import logging
 
 
 # ======================================================
@@ -41,20 +41,6 @@ async def load_task_from_db(task_id: str, user):
 
     return task
 
-async def validate_department_optional(department_id: str):
-
-    if not department_id:
-        return
-
-    try:
-        await get_department(department_id)
-    except Exception:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid department reference: {department_id}"
-        )
-
-import logging
 
 logger = logging.getLogger(__name__)
 # ======================================================
@@ -66,12 +52,6 @@ from datetime import datetime, timezone
 async def create_task(payload, user):
 
     db = await get_db()
-
-    # Validate optional departments
-    await validate_department_optional(payload.origin_department_id)
-    await validate_department_optional(payload.destination_department_id)
-    await validate_department_optional(payload.current_department_id)
-
     task = payload.model_dump()
 
     now = datetime.now(timezone.utc)
@@ -210,19 +190,11 @@ async def list_tasks(user):
 # ======================================================
 async def move_task(
     task_id: str,
-    to_department_id: str,
     user,
     comment: str = None
 ):
 
     db = await get_db()
-
-    # ============================
-    # Validate Department
-    # ============================
-
-    await validate_department_optional(to_department_id)
-
     # ============================
     # Load + Ownership validation
     # ============================
@@ -239,12 +211,6 @@ async def move_task(
             detail="Closed tasks cannot be moved"
         )
 
-    if task.get("current_department_id") == to_department_id:
-        raise HTTPException(
-            status_code=400,
-            detail="Task already in this department"
-        )
-
     now = datetime.now(timezone.utc)
 
     # ============================
@@ -253,9 +219,6 @@ async def move_task(
 
     event = {
         "type": "MOVED",
-
-        "from_department_id": task.get("current_department_id"),
-        "to_department_id": to_department_id,
 
         "comment": comment,
         "created_at": now,
@@ -272,7 +235,7 @@ async def move_task(
         {"_id": ObjectId(task_id)},
         {
             "$set": {
-                "current_department_id": to_department_id,
+
                 "updated_at": now
             },
             "$push": {

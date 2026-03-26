@@ -1,15 +1,23 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { getTasks, closeTask } from "../api";
-
+import { useNavigate } from "react-router-dom";
 import LogoutButton from "../../shared/LogoutButton";
 import { formatMXTime } from "../../../utils/formatMXTime";
+import TasksCreateModal from "./TasksCreateModal";
 
 export default function TasksReports() {
-  const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  // =========================
+  // MODAL STATE
+  // =========================
+  const [showModal, setShowModal] = useState(false);
+  const [animateModal, setAnimateModal] = useState(false);
 
+  // =========================
+  // LOAD TASKS
+  // =========================
   async function load() {
     try {
       const data = await getTasks();
@@ -26,9 +34,11 @@ export default function TasksReports() {
     load();
   }, []);
 
-
-function getStatusColor(task) {
-  if (task.status === "closed") {
+  // =========================
+  // STATUS COLOR
+  // =========================
+  function getStatusColor(task) {
+    if (task.status === "closed") {
       return "bg-green-600 text-white";
     }
 
@@ -42,10 +52,10 @@ function getStatusColor(task) {
 
     return "";
   }
-  // ======================
-  // CLOSE TASK (WITH COMMENT)
-  // ======================
 
+  // =========================
+  // CLOSE TASK
+  // =========================
   async function handleClose(taskId) {
     const comment = prompt("Close reason:");
 
@@ -59,6 +69,22 @@ function getStatusColor(task) {
     }
   }
 
+  // =========================
+  // OPEN MODAL
+  // =========================
+  function openModal() {
+    setShowModal(true);
+    setTimeout(() => setAnimateModal(true), 50);
+  }
+
+  // =========================
+  // CLOSE MODAL
+  // =========================
+  function closeModal() {
+    setAnimateModal(false);
+    setTimeout(() => setShowModal(false), 300);
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-50 flex items-center justify-center">
@@ -69,6 +95,7 @@ function getStatusColor(task) {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 flex flex-col">
+      {/* HEADER */}
       <header className="border-b border-slate-800 px-6 py-4 flex items-center justify-between">
         <LogoutButton />
 
@@ -77,13 +104,14 @@ function getStatusColor(task) {
         </h1>
 
         <button
-          onClick={() => navigate("/task/create")}
+          onClick={openModal}
           className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-md text-sm"
         >
           Create Task
         </button>
       </header>
 
+      {/* CONTENT */}
       <main className="flex-1 px-6 py-4">
         <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4">
           <table className="w-full text-sm">
@@ -102,6 +130,7 @@ function getStatusColor(task) {
               {tasks.map((t) => (
                 <tr key={t.id} className="border-t border-slate-800">
                   <td className="py-2">{t.title}</td>
+
                   <td className="py-2">
                     {formatMXTime(t.created_at)}
                   </td>
@@ -130,11 +159,11 @@ function getStatusColor(task) {
 
                   <td className="py-2 space-x-3">
                     <button
-                      onClick={() => navigate(`/tasks/${t.id}`)}
-                      className="text-indigo-400 hover:text-indigo-200 text-xs"
-                    >
-                      View
-                    </button>
+                    onClick={() => navigate(`/tasks/${t.id}`)}
+                    className="text-indigo-400 hover:text-indigo-200 text-xs"
+                  >
+                    View
+                  </button>
 
                     {t.status !== "closed" && (
                       <button
@@ -150,7 +179,7 @@ function getStatusColor(task) {
 
               {!tasks.length && (
                 <tr>
-                  <td colSpan="5" className="text-center py-6 text-slate-500">
+                  <td colSpan="6" className="text-center py-6 text-slate-500">
                     No tasks found
                   </td>
                 </tr>
@@ -159,6 +188,51 @@ function getStatusColor(task) {
           </table>
         </div>
       </main>
+
+      {/* ========================= */}
+      {/* MODAL */}
+      {/* ========================= */}
+      {showModal && (
+        <div
+          onClick={closeModal}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-xl
+            transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]
+            ${
+              animateModal
+                ? "opacity-100 scale-100 translate-y-0"
+                : "opacity-0 scale-95 translate-y-4"
+            }`}
+          >
+            {/* HEADER */}
+            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-800">
+              <h2 className="text-lg font-semibold">
+                Create Task
+              </h2>
+
+              <button
+                onClick={closeModal}
+                className="text-slate-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* BODY */}
+            <div className="p-6">
+              <TasksCreateModal
+                onClose={() => {
+                  closeModal();
+                  load(); // 🔥 refresh tasks
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

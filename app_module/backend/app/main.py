@@ -10,6 +10,7 @@ from app.modules.users.routes import router as users_router
 from app.modules.users.mock_it_api import router as mock_it_router
 from app.modules.auth.routes import router as auth_router
 from app.modules.tickets.routes import router as tickets_router
+from app.modules.tasks_admin.routes import router as task_router
 
 # =========================
 # App Initialization
@@ -55,6 +56,8 @@ app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 # tickets ✅
 app.include_router(tickets_router)
 
+# tasks
+app.include_router(task_router)
 
 # =========================
 # Health Check

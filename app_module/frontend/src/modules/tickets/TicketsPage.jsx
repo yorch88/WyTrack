@@ -2,10 +2,14 @@ import { useEffect, useState } from "react";
 import { getTickets } from "./api";
 import TicketsTable from "./TicketsTable";
 import CreateTicketModal from "./CreateTicketModal";
+import LogoutButton from "../shared/LogoutButton";
 
 export default function TicketsPage() {
   const [tickets, setTickets] = useState([]);
+
+  // 🔥 MODAL STATE
   const [showModal, setShowModal] = useState(false);
+  const [animateModal, setAnimateModal] = useState(false);
 
   const [filters, setFilters] = useState({
     status: "",
@@ -49,16 +53,31 @@ export default function TicketsPage() {
     loadTickets();
   }, [filters, pagination.page]);
 
+  // =========================
+  // MODAL CONTROL
+  // =========================
+  function openModal() {
+    setShowModal(true);
+    setTimeout(() => setAnimateModal(true), 50);
+  }
+
+  function closeModal() {
+    setAnimateModal(false);
+    setTimeout(() => setShowModal(false), 300);
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 p-6 text-white">
 
       {/* HEADER */}
       <div className="flex justify-between mb-6">
+        <LogoutButton />
+
         <h1 className="text-2xl font-bold">Tickets</h1>
 
         <button
-          onClick={() => setShowModal(true)}
-          className="bg-indigo-600 px-4 py-2 rounded"
+          onClick={openModal}
+          className="bg-indigo-600 px-4 py-2 rounded hover:bg-indigo-500"
         >
           + New Ticket
         </button>
@@ -128,14 +147,49 @@ export default function TicketsPage() {
         </button>
       </div>
 
+      {/* ========================= */}
       {/* MODAL */}
+      {/* ========================= */}
       {showModal && (
-        <CreateTicketModal
-          onClose={() => setShowModal(false)}
-          onCreated={(newTicket) =>
-            setTickets((prev) => [newTicket, ...prev])
-          }
-        />
+        <div
+          onClick={closeModal}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-2xl shadow-xl
+            transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]
+            ${
+              animateModal
+                ? "opacity-100 scale-100 translate-y-0"
+                : "opacity-0 scale-95 translate-y-4"
+            }`}
+          >
+            {/* HEADER */}
+            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-800">
+              <h2 className="text-lg font-semibold">
+                Create Ticket
+              </h2>
+
+              <button
+                onClick={closeModal}
+                className="text-slate-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* BODY */}
+            <div className="p-6">
+              <CreateTicketModal
+                onClose={closeModal}
+                onCreated={(newTicket) => {
+                  setTickets((prev) => [newTicket, ...prev]);
+                }}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

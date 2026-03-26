@@ -7,7 +7,6 @@ import {
   addTaskComment,
   closeTask,
 } from "../api";
-import { getDepartments } from "../../departments/api";
 import LogoutButton from "../../shared/LogoutButton";
 
 export default function TasksDetail() {
@@ -17,34 +16,21 @@ export default function TasksDetail() {
   const navigate = useNavigate();
 
   const [task, setTask] = useState(null);
-  const [departments, setDepartments] = useState([]);
 
   const [comment, setComment] = useState("");
-  const [moveDepartment, setMoveDepartment] = useState("");
 
   const [loading, setLoading] = useState(true);
-  function getDepartmentName(depId) {
-    const dep = departments.find((d) => d.id === depId);
-    return dep ? dep.name : "-";
-    }
-  // ======================
-  // Load Task + Departments
-  // ======================
-
-  async function load() {
-    try {
-      const data = await getTaskById(id);
-      const deps = await getDepartments();
-
-      setTask(data);
-      setDepartments(deps);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to load task");
-    } finally {
-      setLoading(false);
-    }
+async function load() {
+  try {
+    const data = await getTaskById(id);
+    setTask(data); // 👈 ESTE ES EL PROBLEMA
+  } catch (err) {
+    console.error(err);
+    alert("Failed to load task");
+  } finally {
+    setLoading(false);
   }
+}
 
   useEffect(() => {
     load();
@@ -71,11 +57,8 @@ export default function TasksDetail() {
   // ======================
 
   async function handleMoveTask() {
-    if (!moveDepartment) return;
-
     try {
       await moveTask(id, {
-        to_department_id: moveDepartment,
         comment: moveComment
         });
 
@@ -181,12 +164,6 @@ async function handleCloseTask() {
               </div>
             </div>
 
-            <div>
-              <span className="text-slate-400">Current Dept</span>
-              <div>
-                {getDepartmentName(task.current_department_id)}
-            </div>
-            </div>
           </div>
  {task.description && (
           <div className="mt-4 p-4 bg-slate-950 border border-slate-800 rounded-lg">
@@ -211,25 +188,11 @@ async function handleCloseTask() {
         </div>
 
         {/* MOVE TASK */}
-        {task.status !== "closed" && (
+        {/* {task.status !== "closed" && (
          <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-6">
             <h3 className="font-semibold mb-3">Move Task</h3>
 
             <div className="space-y-2">
-
-                <select
-                    value={moveDepartment}
-                    onChange={(e) => setMoveDepartment(e.target.value)}
-                    className="bg-slate-950 border border-slate-700 rounded-md px-3 py-2 text-sm w-full"
-                >
-                    <option value="">-- Select Department --</option>
-
-                    {departments.map((d) => (
-                    <option key={d.id} value={d.id}>
-                        {d.name}
-                    </option>
-                    ))}
-                </select>
 
                 <input
                     value={moveComment}
@@ -247,7 +210,7 @@ async function handleCloseTask() {
 
                 </div>
         </div>
-        )}
+        )} */}
 
 
         {/* COMMENTS */}

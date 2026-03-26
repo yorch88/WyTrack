@@ -4,7 +4,6 @@ from app.core.security import get_current_user
 
 from app.modules.tasks_admin.models import (
     TaskCreate,
-    TaskMove,
     TaskComment,
     TaskOut,
     MoveTaskPayload,
@@ -54,7 +53,6 @@ async def get_all_tasks_endpoint(user=Depends(get_current_user)):
 async def move_task_endpoint(task_id: str, payload: MoveTaskPayload, user=Depends(get_current_user)):
     return await move_task(
         task_id,
-        payload.to_department_id,
         user,
         payload.comment
     )

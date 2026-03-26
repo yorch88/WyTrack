@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { login } from "./api";
 import logo from "../../images/logo.svg";
 
@@ -6,6 +6,23 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // =========================
+  // Fade animation
+  // =========================
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShow(true);
+    }, 500); // 👈 necesario para activar transición
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // =========================
+  // Login
+  // =========================
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -22,7 +39,7 @@ export default function Login() {
       localStorage.setItem("user_level", JSON.stringify(data.level || []));
 
       const redirect =
-        localStorage.getItem("redirect_after_login") || "/ticketspage";
+        localStorage.getItem("redirect_after_login") || "/";
 
       localStorage.removeItem("redirect_after_login");
 
@@ -36,15 +53,29 @@ export default function Login() {
     }
   }
 
+  // =========================
+  // UI
+  // =========================
+
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4 relative">
 
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl">
-
+      <div
+        className={`w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl
+        transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)]
+        ${
+          show
+            ? "opacity-100 translate-y-0 scale-100"
+            : "opacity-0 translate-y-6 scale-95"
+        }
+      `}
+      >
+        {/* LOGO */}
         <div className="flex justify-center mb-1">
           <img src={logo} alt="Logo" className="w-[220px]" />
         </div>
 
+        {/* TITLE */}
         <div className="text-center mb-1">
           <h1 className="text-2xl font-bold text-slate-100">
             WyTrack
@@ -54,6 +85,7 @@ export default function Login() {
           </p>
         </div>
 
+        {/* FORM */}
         <form onSubmit={handleLogin} className="space-y-4">
 
           <input
@@ -77,7 +109,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-md"
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-md disabled:opacity-50"
           >
             {loading ? "Signing in..." : "Login"}
           </button>

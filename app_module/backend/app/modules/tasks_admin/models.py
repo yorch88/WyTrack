@@ -6,17 +6,8 @@ from datetime import datetime
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
-
-    origin_department_id: Optional[str] = None
-    destination_department_id: Optional[str] = None
-    current_department_id: Optional[str] = None
-
     priority: Optional[str] = None
     eta_at: Optional[datetime] = None
-
-
-class TaskMove(BaseModel):
-    to_department_id: str
 
 
 class TaskComment(BaseModel):
@@ -33,9 +24,6 @@ class TaskEventOut(BaseModel):
     # For move / close events
     comment: Optional[str] = None
 
-    from_department_id: Optional[str] = None
-    to_department_id: Optional[str] = None
-
 class TaskOut(BaseModel):
 
     id: str
@@ -44,11 +32,6 @@ class TaskOut(BaseModel):
     description: Optional[str] = None
 
     status: str
-
-    origin_department_id: Optional[str] = None
-    destination_department_id: Optional[str] = None
-    current_department_id: Optional[str] = None
-
     eta_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
 
@@ -64,7 +47,6 @@ class TaskETAUpdate(BaseModel):
     eta_at: datetime
 
 class MoveTaskPayload(BaseModel):
-    to_department_id: str
     comment: Optional[str] = None
 
 class CloseTaskPayload(BaseModel):
